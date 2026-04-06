@@ -162,7 +162,7 @@ function compressImage(file, maxDim, quality) {
 
 // === Analysis ===
 async function startAnalysis() {
-  const apiKey = document.getElementById('apiKeyInput').value.trim();
+  const apiKey = localStorage.getItem('claude_api_key') || document.getElementById('apiKeyInput').value.trim();
   if (!apiKey) { showToast('API Key를 입력해주세요', true); return; }
   if (!compressedBase64) { showToast('사진을 먼저 업로드해주세요', true); return; }
 
@@ -397,8 +397,34 @@ function showToast(msg, isError = false) {
   setTimeout(() => { toast.className = 'toast'; }, 3000);
 }
 
-// === API Toggle ===
+// === API Key Management ===
 function toggleApiKey() {
   const input = document.getElementById('apiKeyInput');
   input.type = input.type === 'password' ? 'text' : 'password';
 }
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) { showToast('API Key를 입력해주세요', true); return; }
+  localStorage.setItem('claude_api_key', key);
+  showSavedState();
+  showToast('API Key가 저장되었습니다');
+}
+
+function changeApiKey() {
+  localStorage.removeItem('claude_api_key');
+  document.getElementById('apiKeyInput').value = '';
+  document.getElementById('apiInputRow').style.display = 'flex';
+  document.getElementById('apiSavedRow').style.display = 'none';
+}
+
+function showSavedState() {
+  document.getElementById('apiInputRow').style.display = 'none';
+  document.getElementById('apiSavedRow').style.display = 'flex';
+}
+
+// On page load: check localStorage
+(function() {
+  const saved = localStorage.getItem('claude_api_key');
+  if (saved) showSavedState();
+})();

@@ -28,11 +28,16 @@
     <!-- API Key -->
     <section class="card api-card" id="apiSection">
       <div class="card-label">API 설정</div>
-      <div class="api-row">
+      <div id="apiInputRow" class="api-row">
         <input type="password" id="apiKeyInput" placeholder="Anthropic API Key 입력" autocomplete="off">
-        <button id="apiToggle" class="btn-icon" onclick="toggleApiKey()">👁</button>
+        <button class="btn-icon" onclick="toggleApiKey()">👁</button>
+        <button class="btn-save" onclick="saveApiKey()">저장</button>
       </div>
-      <p class="hint">API Key는 서버로 전송되지 않으며 브라우저에서만 사용됩니다</p>
+      <div id="apiSavedRow" class="api-saved" style="display:none">
+        <span>API Key 저장됨 ✓</span>
+        <button class="btn-change" onclick="changeApiKey()">변경</button>
+      </div>
+      <p class="hint">API Key는 브라우저 로컬 저장소에만 저장됩니다</p>
     </section>
 
     <!-- Upload -->
