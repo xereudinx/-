@@ -1,7 +1,6 @@
 // === State ===
 let compressedBase64 = null;
 let checklistData = null;
-let guidelinesDocs = []; // { name, sizeKB, base64 }
 
 // === Safety Guidelines (built-in) ===
 const SAFETY_GUIDELINES = `
@@ -58,55 +57,45 @@ fileInput.addEventListener('change', async (e) => {
   }
 });
 
-// === Guidelines PDF Upload ===
-document.getElementById('guidelinesInput').addEventListener('change', async (e) => {
-  const files = Array.from(e.target.files);
-  for (const file of files) {
-    if (file.type !== 'application/pdf') {
-      showToast(`${file.name}은 PDF가 아닙니다`, true);
-      continue;
-    }
-    if (guidelinesDocs.some(d => d.name === file.name)) {
-      showToast(`${file.name}은 이미 등록되어 있습니다`, true);
-      continue;
-    }
-    try {
-      const base64 = await fileToBase64(file);
-      guidelinesDocs.push({ name: file.name, sizeKB: Math.round(file.size / 1024), base64 });
-    } catch (err) {
-      showToast(`${file.name} 읽기 실패`, true);
-    }
+// === Auto-load Guidelines from guidelines/index.json ===
+let guidelinesLoaded = false;
+let guidelinesDocs = []; // { name, base64 }
+
+async function loadGuidelines() {
+  if (guidelinesLoaded) return;
+  try {
+    const res = await fetch('guidelines/index.json');
+    if (!res.ok) { console.warn('guidelines/index.json not found'); guidelinesLoaded = true; return; }
+    const filenames = await res.json();
+    const results = await Promise.allSettled(
+      filenames.map(async (name) => {
+        const r = await fetch(`guidelines/${name}`);
+        if (!r.ok) throw new Error(`${name} fetch failed`);
+        const buf = await r.arrayBuffer();
+        const base64 = arrayBufferToBase64(buf);
+        return { name, base64 };
+      })
+    );
+    guidelinesDocs = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+    console.log(`Guidelines loaded: ${guidelinesDocs.length}/${filenames.length}`);
+  } catch (e) {
+    console.warn('Guidelines load error:', e);
   }
-  renderGuidelinesList();
-  e.target.value = '';
-});
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = () => reject(new Error('Read failed'));
-    reader.readAsDataURL(file);
-  });
+  guidelinesLoaded = true;
 }
 
-function renderGuidelinesList() {
-  const list = document.getElementById('guidelinesList');
-  const count = document.getElementById('guidelinesCount');
-  count.textContent = `${guidelinesDocs.length}개 등록`;
-  list.innerHTML = guidelinesDocs.map((doc, i) =>
-    `<div class="guideline-item">
-      <span class="name">📄 ${doc.name}</span>
-      <span class="size">${doc.sizeKB} KB</span>
-      <button class="remove" onclick="removeGuideline(${i})">✕</button>
-    </div>`
-  ).join('');
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunk = 8192;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
 }
 
-function removeGuideline(index) {
-  guidelinesDocs.splice(index, 1);
-  renderGuidelinesList();
-}
+// Load on page start
+loadGuidelines();
 
 // === Image Compression ===
 function compressImage(file, maxDim, quality) {
@@ -145,6 +134,9 @@ async function startAnalysis() {
   if (!compressedBase64) { showToast('사진을 먼저 업로드해주세요', true); return; }
 
   setLoading(true);
+
+  // Ensure guidelines are loaded
+  await loadGuidelines();
 
   const prompt = guidelinesDocs.length > 0
     ? `당신은 건설현장 안전점검 전문가입니다.
