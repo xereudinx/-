@@ -12,6 +12,7 @@
 </head>
 <body>
   <div class="app">
+    <!-- Header -->
     <header class="header">
       <div class="header-icon">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -23,6 +24,7 @@
       <p class="header-sub">현장 사진을 업로드하면 AI가 안전점검 항목을 생성합니다</p>
     </header>
 
+    <!-- API Key -->
     <section class="card api-card" id="apiSection">
       <div class="card-label">API 설정</div>
       <div class="api-row">
@@ -32,6 +34,7 @@
       <p class="hint">API Key는 서버로 전송되지 않으며 브라우저에서만 사용됩니다</p>
     </section>
 
+    <!-- Upload -->
     <section class="card" id="uploadSection">
       <div class="card-label">현장 사진</div>
       <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
@@ -49,11 +52,13 @@
       <div class="file-info" id="fileInfo" style="display:none"></div>
     </section>
 
+    <!-- Analyze Button -->
     <button class="btn-analyze" id="analyzeBtn" onclick="startAnalysis()" disabled>
       <span id="analyzeBtnText">AI 분석 시작</span>
       <div id="analyzeSpinner" class="spinner" style="display:none"></div>
     </button>
 
+    <!-- Result -->
     <section class="card result-card" id="resultSection" style="display:none">
       <div class="result-header">
         <div class="card-label">안전점검 체크리스트</div>
@@ -68,6 +73,7 @@
       </button>
     </section>
 
+    <!-- Toast -->
     <div class="toast" id="toast"></div>
   </div>
 

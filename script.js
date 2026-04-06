@@ -4,19 +4,92 @@ let checklistData = null;
 
 // === Safety Guidelines (built-in) ===
 const SAFETY_GUIDELINES = `
-[기본 안전점검 항목]
-1. 개인보호구: 안전모, 안전화, 안전조끼 착용 여부
-2. 추락방지: 안전난간, 안전망, 개구부 덮개 설치 여부
-3. 중장비: 작업구역 통제, 신호수 배치, 장비 점검 여부
-4. 가설구조물: 비계, 거푸집, 동바리 설치 상태
-5. 전기안전: 누전차단기, 접지, 배선 상태
-6. 굴착작업: 토사붕괴 방지, 흙막이, 지하매설물 확인
-7. 작업환경: 정리정돈, 통로 확보, 조명 상태
-8. 안전표지: 위험표지, 경고표지, 안내표지 설치 여부
-9. 안전교육: 작업 전 안전교육(TBM) 실시 여부
-10. 화재예방: 소화기 비치, 용접작업 시 방화조치 여부
-11. 밀폐공간: 환기설비, 가스측정, 감시인 배치 여부
-12. 양중작업: 와이어로프 상태, 과부하 방지, 신호체계 여부
+[A. 산업안전보건기준에 관한 규칙 (고용노동부령 제450호)]
+
+1. 작업장 안전 (제3~30조)
+ - 통로 확보: 작업장 통로 폭 1.2m 이상 유지, 장애물 제거 (제3조)
+ - 조명: 작업면 조도 확보 (일반작업 150lux 이상, 정밀작업 300lux 이상) (제8조)
+ - 정리정돈: 작업장 바닥 및 통로 정리정돈 상태 (제10조)
+
+2. 개인보호구 (제31~34조)
+ - 안전모: 물체 낙하·비래 위험 작업 시 착용 (제31조)
+ - 안전화: 중량물 취급, 추락위험 작업 시 착용 (제32조)
+ - 안전대: 높이 2m 이상 추락위험 장소에서 착용 (제33조)
+ - 보호구 지급·관리: 보호구 상태 점검 및 교체 (제34조)
+
+3. 추락방지 (제42~48조)
+ - 안전난간: 높이 2m 이상 개구부, 작업발판 끝에 설치 (제42조) / 높이 90cm 이상, 중간대 설치
+ - 추락방호망: 안전난간 설치 곤란 시 설치 (제43조)
+ - 개구부 덮개: 바닥 개구부에 견고한 덮개 설치 (제44조)
+ - 안전대 부착설비: 안전대 걸이용 구조물 설치 (제45조)
+
+4. 비계 (제54~66조)
+ - 강관비계: 수직·수평재 연결 상태, 벽이음 간격 확인 (제55조)
+ - 작업발판: 폭 40cm 이상, 틈새 3cm 이하, 고정 상태 (제56조)
+ - 시스템비계: 수직재·수평재·가새재 연결부 체결 상태 (제58조)
+
+5. 거푸집·동바리 (제330~339조)
+ - 거푸집 조립 시 콘크리트 측압 고려한 지보공 설치 (제331조)
+ - 동바리 수직도, 연결부 체결 상태, 침하 방지 조치 (제332조)
+ - 콘크리트 타설 시 편압 방지, 타설 속도 관리 (제334조)
+
+6. 건설기계 (제171~221조)
+ - 유도자·신호수 배치: 건설기계 작업 시 유도자 배치 (제171조)
+ - 접촉 방지: 작업반경 내 근로자 출입금지 조치 (제174조)
+ - 전도 방지: 지반 침하 방지, 아웃리거 설치 (제175조)
+ - 작업계획서: 건설기계 작업 전 작업계획서 작성 (제171조)
+
+7. 굴착작업 (제338~350조)
+ - 토사붕괴 방지: 흙막이 지보공 설치 (제339조)
+ - 지하매설물: 굴착 전 매설물 확인, 이설·보호조치 (제340조)
+ - 경사면 기울기 준수: 지질에 따른 굴착면 기울기 확인 (제341조)
+ - 굴착기계 작업반경 내 출입금지 (제342조)
+
+8. 전기안전 (제301~337조)
+ - 누전차단기: 이동형 전기기계·기구에 설치 (제304조)
+ - 접지: 전기기계·기구 외함 접지 (제305조)
+ - 감전방지: 충전부 절연 또는 격리 (제301조)
+ - 가공전선 근접작업: 이격거리 확보 또는 방호관 설치 (제322조)
+
+9. 화재·폭발 예방 (제225~280조)
+ - 소화기: 작업장 내 소화기 비치 (제225조)
+ - 용접작업: 불꽃 비산 방지 조치, 소화기 비치, 화재감시인 배치 (제241조)
+ - 위험물 저장: 위험물 종류별 적정 보관 (제230조)
+
+10. 밀폐공간 (제618~628조)
+ - 산소농도 측정: 작업 전 산소농도 18% 이상 확인 (제619조)
+ - 환기: 적정 공기 유지를 위한 환기설비 가동 (제620조)
+ - 감시인: 밀폐공간 외부에 감시인 배치 (제621조)
+
+11. 양중작업
+ - 와이어로프: 꼬임·마모·절단 점검 (제163조)
+ - 과부하 방지: 정격하중 초과 금지, 과부하방지장치 (제166조)
+ - 신호체계: 일정한 신호방법 정하여 운용 (제164조)
+
+[B. 건설기계 안전기준에 관한 규칙]
+
+1. 굴착기: 붐·암·버킷 연결핀 및 유압호스 상태 점검
+2. 크레인: 안전밸브, 과부하방지장치, 권과방지장치 작동 확인
+3. 지게차: 포크 균열, 마스트 체인, 후방경보기, 헤드가드
+4. 고소작업차: 작업대 안전난간, 과부하경보, 아웃리거 설치
+
+[C. 안전보건관리규정 (한국농어촌공사, 2026.01.01 개정)]
+
+1. 위험성평가 실시: 사업주가 유해위험요인 파악 및 위험성 수준 결정 (제3조)
+2. 안전보건교육: TBM(Tool Box Meeting) 실시 여부, 신규채용 교육
+3. 산업재해 보고: 재해 발생 시 즉시 보고 및 기록 유지
+4. 관계수급인 안전관리: 하도급 근로자 포함 안전관리 적용
+5. 안전보건 점검: 정기점검, 수시점검, 특별점검 구분 실시
+
+[D. 건설공사안전관리지침 (2025.01.01 전부개정)]
+
+1. 안전관리계획서: 공사착공 전 안전관리계획서 수립·제출
+2. 안전점검 종류: 정기안전점검, 정밀안전점검, 초기점검 구분
+3. 시공 중 안전관리: 공종별 위험요소 사전파악, 작업 전 안전조치
+4. 가설구조물 점검: 비계·거푸집·동바리 등 설치 전후 점검
+5. 건설기계 안전: 작업계획서 작성, 유자격 운전원, 정기점검
+6. 위험작업 허가제: 밀폐공간, 화기, 중장비, 고소작업 시 작업허가서 발행
+7. 안전관리비 사용: 안전시설, 보호구, 교육 등에 적정 집행
 `;
 
 // === Elements ===
@@ -57,46 +130,6 @@ fileInput.addEventListener('change', async (e) => {
   }
 });
 
-// === Auto-load Guidelines from guidelines/index.json ===
-let guidelinesLoaded = false;
-let guidelinesDocs = []; // { name, base64 }
-
-async function loadGuidelines() {
-  if (guidelinesLoaded) return;
-  try {
-    const res = await fetch('guidelines/index.json');
-    if (!res.ok) { console.warn('guidelines/index.json not found'); guidelinesLoaded = true; return; }
-    const filenames = await res.json();
-    const results = await Promise.allSettled(
-      filenames.map(async (name) => {
-        const r = await fetch(`guidelines/${name}`);
-        if (!r.ok) throw new Error(`${name} fetch failed`);
-        const buf = await r.arrayBuffer();
-        const base64 = arrayBufferToBase64(buf);
-        return { name, base64 };
-      })
-    );
-    guidelinesDocs = results.filter(r => r.status === 'fulfilled').map(r => r.value);
-    console.log(`Guidelines loaded: ${guidelinesDocs.length}/${filenames.length}`);
-  } catch (e) {
-    console.warn('Guidelines load error:', e);
-  }
-  guidelinesLoaded = true;
-}
-
-function arrayBufferToBase64(buffer) {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  const chunk = 8192;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
-  }
-  return btoa(binary);
-}
-
-// Load on page start
-loadGuidelines();
-
 // === Image Compression ===
 function compressImage(file, maxDim, quality) {
   return new Promise((resolve, reject) => {
@@ -135,37 +168,9 @@ async function startAnalysis() {
 
   setLoading(true);
 
-  // Ensure guidelines are loaded
-  await loadGuidelines();
-
-  const prompt = guidelinesDocs.length > 0
-    ? `당신은 건설현장 안전점검 전문가입니다.
-업로드된 현장 사진을 분석하고, 제공된 산업안전 및 건설 안전 지침 문서를 근거로 현장 안전점검 체크리스트를 작성하세요.
-각 체크리스트는 실제 현장에서 사용할 수 있는 점검 항목 형태로 작성하고, 중요 위험 요소는 우선순위를 높게 표시하세요.
-아래 기본 안전점검 항목도 함께 참고하세요.
-
-${SAFETY_GUIDELINES}
-
-[규칙]
-- 사진에서 관찰되는 상황과 안전 지침 문서 내용을 결합하여 10~15개 항목 생성
-- 각 항목에 위험도를 판단: "위험", "주의", "양호" 중 택1
-- 사진에서 보이는 구체적 상황을 반영할 것
-- 지침 문서에서 근거 조항이 있으면 항목에 포함할 것
-
-[출력 형식 - 반드시 JSON만 출력, 다른 텍스트 없이]
-{
-  "site_summary": "현장 요약 (1문장)",
-  "groups": [
-    {
-      "title": "카테고리명",
-      "items": [
-        { "text": "점검 항목 내용", "level": "위험|주의|양호" }
-      ]
-    }
-  ]
-}`
-    : `당신은 건설현장 안전점검 전문가입니다.
-첨부된 현장 사진을 분석하고, 아래 안전 지침 데이터를 참고하여 안전점검 체크리스트를 JSON 형식으로 생성하세요.
+  const prompt = `당신은 건설현장 안전점검 전문가입니다.
+업로드된 현장 사진을 분석하고, 아래 산업안전 및 건설 안전 지침을 근거로 현장 안전점검 체크리스트를 작성하세요.
+각 항목은 실제 현장에서 사용할 수 있는 점검 항목 형태로 작성하고, 근거 법령 조항을 함께 표시하세요.
 
 ${SAFETY_GUIDELINES}
 
@@ -173,6 +178,7 @@ ${SAFETY_GUIDELINES}
 - 사진에서 관찰되는 상황과 안전 지침을 결합하여 10~15개 항목 생성
 - 각 항목에 위험도를 판단: "위험", "주의", "양호" 중 택1
 - 사진에서 보이는 구체적 상황을 반영할 것
+- 각 항목에 근거 조항 번호를 포함할 것 (예: 제42조)
 
 [출력 형식 - 반드시 JSON만 출력, 다른 텍스트 없이]
 {
@@ -181,22 +187,11 @@ ${SAFETY_GUIDELINES}
     {
       "title": "카테고리명",
       "items": [
-        { "text": "점검 항목 내용", "level": "위험|주의|양호" }
+        { "text": "점검 항목 내용 (근거: 제XX조)", "level": "위험|주의|양호" }
       ]
     }
   ]
 }`;
-
-  // Build content array: guidelines PDFs + photo + prompt
-  const contentBlocks = [];
-  guidelinesDocs.forEach(doc => {
-    contentBlocks.push({
-      type: 'document',
-      source: { type: 'base64', media_type: 'application/pdf', data: doc.base64 }
-    });
-  });
-  contentBlocks.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: compressedBase64 } });
-  contentBlocks.push({ type: 'text', text: prompt });
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -212,7 +207,10 @@ ${SAFETY_GUIDELINES}
         max_tokens: 2000,
         messages: [{
           role: 'user',
-          content: contentBlocks
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: compressedBase64 } },
+            { type: 'text', text: prompt }
+          ]
         }]
       })
     });
