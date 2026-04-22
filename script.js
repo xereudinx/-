@@ -1,6 +1,7 @@
 // === State ===
-let compressedBase64 = null;
+let images = []; // Array of base64 strings (max 5)
 let checklistData = null;
+const MAX_IMAGES = 5;
 
 // === Safety Guidelines (built-in) ===
 const SAFETY_GUIDELINES = `
@@ -94,10 +95,10 @@ const SAFETY_GUIDELINES = `
 
 // === Elements ===
 const fileInput = document.getElementById('fileInput');
-const preview = document.getElementById('preview');
 const uploadPlaceholder = document.getElementById('uploadPlaceholder');
 const uploadZone = document.getElementById('uploadZone');
-const fileInfo = document.getElementById('fileInfo');
+const thumbGrid = document.getElementById('thumbGrid');
+const photoCount = document.getElementById('photoCount');
 const analyzeBtn = document.getElementById('analyzeBtn');
 const analyzeBtnText = document.getElementById('analyzeBtnText');
 const analyzeSpinner = document.getElementById('analyzeSpinner');
@@ -105,30 +106,61 @@ const resultSection = document.getElementById('resultSection');
 const checklistArea = document.getElementById('checklistArea');
 const resultMeta = document.getElementById('resultMeta');
 
-// === File Input ===
+// === File Input (multiple) ===
 fileInput.addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (!file.type.startsWith('image/')) {
-    showToast('이미지 파일만 업로드 가능합니다', true);
+  const files = Array.from(e.target.files);
+  if (files.length === 0) return;
+
+  const remaining = MAX_IMAGES - images.length;
+  if (remaining <= 0) {
+    showToast(`최대 ${MAX_IMAGES}장까지 업로드 가능합니다`, true);
+    e.target.value = '';
     return;
   }
-  try {
-    const compressed = await compressImage(file, 2048, 0.7);
-    compressedBase64 = compressed.base64;
-    preview.src = 'data:image/jpeg;base64,' + compressedBase64;
-    preview.style.display = 'block';
-    uploadPlaceholder.style.display = 'none';
-    uploadZone.classList.add('has-image');
-    const sizeKB = Math.round(compressed.sizeBytes / 1024);
-    fileInfo.style.display = 'flex';
-    fileInfo.innerHTML = `<span>📷 ${file.name}</span><span>${sizeKB} KB</span>`;
-    analyzeBtn.disabled = false;
-    resultSection.style.display = 'none';
-  } catch (err) {
-    showToast('이미지 처리 중 오류가 발생했습니다', true);
+
+  const toProcess = files.slice(0, remaining);
+  if (files.length > remaining) {
+    showToast(`최대 ${MAX_IMAGES}장까지만 추가됩니다`, true);
   }
+
+  for (const file of toProcess) {
+    if (!file.type.startsWith('image/')) continue;
+    try {
+      const compressed = await compressImage(file, 2048, 0.7);
+      images.push(compressed.base64);
+    } catch (err) {
+      showToast('이미지 처리 실패: ' + file.name, true);
+    }
+  }
+
+  renderThumbs();
+  e.target.value = '';
+  resultSection.style.display = 'none';
 });
+
+function renderThumbs() {
+  thumbGrid.innerHTML = images.map((b64, i) =>
+    `<div class="thumb-card">
+      <img src="data:image/jpeg;base64,${b64}" alt="">
+      <span class="thumb-num">${i + 1}</span>
+      <button class="thumb-remove" onclick="removeImage(${i})" type="button">✕</button>
+    </div>`
+  ).join('');
+
+  photoCount.textContent = `(${images.length}/${MAX_IMAGES})`;
+  analyzeBtn.disabled = images.length === 0;
+
+  if (images.length > 0) {
+    uploadPlaceholder.innerHTML = `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg><span>사진 추가 (${images.length}/${MAX_IMAGES})</span>`;
+  } else {
+    uploadPlaceholder.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><span>터치하여 사진 촬영 또는 선택 (최대 5장)</span>`;
+  }
+}
+
+function removeImage(index) {
+  images.splice(index, 1);
+  renderThumbs();
+}
 
 // === Image Compression ===
 function compressImage(file, maxDim, quality) {
@@ -164,7 +196,7 @@ function compressImage(file, maxDim, quality) {
 async function startAnalysis() {
   const apiKey = localStorage.getItem('claude_api_key') || document.getElementById('apiKeyInput').value.trim();
   if (!apiKey) { showToast('API Key를 입력해주세요', true); return; }
-  if (!compressedBase64) { showToast('사진을 먼저 업로드해주세요', true); return; }
+  if (images.length === 0) { showToast('사진을 먼저 업로드해주세요', true); return; }
 
   setLoading(true);
 
@@ -178,7 +210,7 @@ async function startAnalysis() {
 
 [입력]
 - 선택 공종: ${workTypeLabel}
-- 첨부 현장 사진: (첨부된 이미지 참조)
+- 첨부 현장 사진: ${images.length}장 (모든 사진을 종합적으로 분석하되, 사진 간 중복되는 위험요소는 하나의 항목으로 통합)
 
 [참고 법령 및 지침]
 ${SAFETY_GUIDELINES}
@@ -246,7 +278,7 @@ ${SAFETY_GUIDELINES}
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: compressedBase64 } },
+            ...images.map(b64 => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } })),
             { type: 'text', text: prompt }
           ]
         }]
@@ -326,10 +358,12 @@ async function downloadPDF() {
   let html = `<h1 style="font-size:17px;text-align:center;margin:0 0 2px;font-weight:800;">현장 안전점검 체크리스트</h1>`;
   html += `<p style="text-align:center;font-size:9px;color:#888;margin:0 0 12px;">${resultMeta.textContent}</p>`;
 
-  // Photo thumbnail
-  if (compressedBase64) {
-    html += `<div style="text-align:center;margin-bottom:12px;">`;
-    html += `<img src="data:image/jpeg;base64,${compressedBase64}" style="max-width:280px;max-height:180px;border-radius:6px;border:1px solid #ddd;">`;
+  // Photo thumbnails (all uploaded images)
+  if (images.length > 0) {
+    html += `<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:12px;">`;
+    images.forEach(b64 => {
+      html += `<img src="data:image/jpeg;base64,${b64}" style="width:120px;height:90px;object-fit:cover;border-radius:5px;border:1px solid #ddd;">`;
+    });
     html += `</div>`;
   }
 
